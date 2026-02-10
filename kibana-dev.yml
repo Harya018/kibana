@@ -1,0 +1,5 @@
+server.port: 5601
+server.host: "localhost"
+elasticsearch.hosts: ["http://localhost:9200"]
+elasticsearch.ssl.verificationMode: none
+path.data: /home/kali/Django/kibana-data

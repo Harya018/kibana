@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'audit/css/style.css' %}">
+</head>
+<body>
+
+<div class="login-container">
+    <h2>Login</h2>
+
+    {% if error %}
+    <div class="error-message">Invalid username or password</div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label>Username:</label>
+        <input type="text" name="username">
+
+        <label>Password:</label>
+        <input type="password" name="password">
+
+        <button type="submit">Login</button>
+    </form>
+</div>
+
+</body>
+</html>
