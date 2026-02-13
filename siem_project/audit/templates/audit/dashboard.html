@@ -1,4 +1,63 @@
-<h2>Welcome {{ request.user.username }}</h2>
-<p>This is your dashboard</p>
+<head>
+    <title>Dashboard</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
 
-<a href="/logout/">Logout</a>
+        .card {
+            display: inline-block;
+            width: 200px;
+            padding: 20px;
+            margin: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            vertical-align: top;
+        }
+
+        .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .label {
+            color: #666;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Welcome {{ request.user.username }}</h2>
+    <p>System Overview</p>
+
+    <div class="card">
+        <div class="number">{{ total_transactions }}</div>
+        <div class="label">Total Transactions</div>
+        <br>
+        <a href="{% url 'transaction_list' %}">View All</a>
+    </div>
+
+    <div class="card">
+        <div class="number">{{ total_alerts }}</div>
+        <div class="label">Fraud Alerts</div>
+        <br>
+        <a href="{% url 'fraud_alerts' %}" style="color: red;">View Alerts</a>
+    </div>
+
+    <br><br>
+    <a href="/logout/" class="btn">Logout</a>
+</body>

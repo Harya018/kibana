@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Fraud Alerts</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #c62828;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .flagged {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>⚠️ Fraud Alerts</h1>
+    <a href="{% url 'dashboard' %}" class="btn">Back to Dashboard</a>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Account</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Location</th>
+                <th>Reason</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in alerts %}
+            <tr class="flagged">
+                <td>{{ t.timestamp }}</td>
+                <td>{{ t.account_number }}</td>
+                <td>{{ t.transaction_type }}</td>
+                <td>{{ t.amount }}</td>
+                <td>{{ t.location }}</td>
+                <td>{{ t.flag_reason }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">No active alerts.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+</html>

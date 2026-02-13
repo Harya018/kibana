@@ -21,6 +21,11 @@ class ElasticsearchHandler(logging.Handler):
                 'timestamp': datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
                 'message': record.getMessage()
             }
+            
+            # Include custom transaction data if present
+            if hasattr(record, 'transaction_data'):
+                log_entry['transaction_data'] = record.transaction_data
+            
             es_client.index(index=settings.ELASTICSEARCH_INDEX, document=log_entry)
         except ApiError as e:
             # Fallback: Log to console if ES fails

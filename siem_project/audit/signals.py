@@ -80,8 +80,27 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
         'ip_address': ip
     })
 
-    # 3️⃣ Send alert for high-severity event
     send_alert(
         subject="SIEM Alert: Failed Login Attempt",
         message=f"Failed login attempt detected.\nUsername: {username}\nIP: {ip}\nTimestamp: {AuditLog.objects.filter(event_type='LOGIN_FAILED').last().timestamp if AuditLog.objects.filter(event_type='LOGIN_FAILED').exists() else 'N/A'}"
     )
+
+
+# 4️⃣ Transaction Sync (NEW)
+from django.db.models.signals import post_save
+from .models import Transaction
+
+@receiver(post_save, sender=Transaction)
+def log_transaction_to_es(sender, instance, created, **kwargs):
+    if created:
+        audit_logger.info(f"Transaction {instance.transaction_type}", extra={
+            'event_type': 'TRANSACTION',
+            'transaction_data': {
+                'account_number': instance.account_number,
+                'amount': float(instance.amount),
+                'transaction_type': instance.transaction_type,
+                'location': instance.location,
+                'is_flagged': instance.is_flagged,
+                'flag_reason': instance.flag_reason
+            }
+        })
