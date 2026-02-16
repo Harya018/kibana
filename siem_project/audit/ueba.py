@@ -74,7 +74,9 @@ class UEBAEngine:
             risk_boost += 15.0
             
         # 2. Unusual Time Check
-        known_hours = profile.get("behavior", {}).get("login_hours", [])
+        known_hours = []
+        if profile:
+            known_hours = profile.get("behavior", {}).get("login_hours", [])
         if profile and known_hours and current_hour not in known_hours:
             # Simple check: if we have history and this hour is new
             # Relaxed check: if we have enough data (len > 5) and it's missing

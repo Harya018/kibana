@@ -170,20 +170,35 @@ class RiskScorer:
     @staticmethod
     def calculate_risk(event_doc):
         """
-        Calculate risk score 0-100.
+        Calculate risk score 0-100 based on Rule Weight + Anomaly + Bias.
         """
         action = event_doc.get("event", {}).get("action", "unknown")
-        severity = event_doc.get("event", {}).get("severity", "low").lower() # Assuming mapped to string
         
-        base = RiskScorer.BASE_SCORES.get(action, 1)
+        # 1. Base Score
+        base = RiskScorer.BASE_SCORES.get(action, 0)
+        
+        # 2. Severity Multiplier
+        severity = event_doc.get("event", {}).get("severity", "low").lower()
         multiplier = RiskScorer.SEVERITY_MULTIPLIER.get(severity, 1.0)
         
-        # Check explicit risk from normalization
+        # 3. Anomaly Boost (Explicitly checked)
+        anomaly_boost = 0.0
+        event_type = event_doc.get("event", {}).get("type")
+        if event_type == "behavioral_anomaly":
+            anomaly_boost = 25.0
+        elif event_type == "anomaly": # Transaction anomaly
+            anomaly_boost = 50.0
+
+        # 4. Existing Analysis Score (e.g. from pre-processing)
         existing_risk = event_doc.get("risk", {}).get("score", 0)
-        if existing_risk > 0:
-            return existing_risk
+        
+        # 5. Asset Criticality Bias (Placeholder)
+        # In real system, lookup host.name in CMDB
+        asset_bias = 1.0
+        if "web-server" in event_doc.get("host", {}).get("name", ""):
+            asset_bias = 1.2
             
-        score = base * multiplier
+        final_score = (base * multiplier * asset_bias) + anomaly_boost + existing_risk
         
         # Cap at 100
-        return min(score, 100.0)
+        return min(final_score, 100.0)

@@ -91,7 +91,11 @@ class NormalizationPipeline:
             "command_line": data.get("cmd_line"),
             "executable": data.get("file_path")
         }
-        doc["user"] = {"name": data.get("user")}
+        user_val = data.get("user")
+        if isinstance(user_val, dict):
+            doc["user"] = {"name": user_val.get("name")}
+        else:
+            doc["user"] = {"name": user_val}
         doc["host"] = {"name": data.get("hostname", "unknown-host")}
         
     @staticmethod
@@ -246,6 +250,9 @@ class LogIngestionService:
             
             return response['result']
         except Exception as e:
+            import traceback
             logger.error(f"Failed to ingest log: {e}")
+            with open("ingestion_error.log", "a") as f:
+                f.write(f"{datetime.now()}: {e}\n{traceback.format_exc()}\n")
             print(f"DEBUG: Ingestion Error: {e}") 
             return "failed"

@@ -42,14 +42,29 @@ class PlaybookGenerator:
     """
     
     @staticmethod
-    def generate_playbook(incident_doc):
+    def generate_playbook(incident_doc, history=None):
         """
         Generates a markdown playbook for the given incident.
         """
         incident_json = json.dumps(incident_doc, indent=2)
+        history_text = ""
+        if history:
+            history_text = "Similar Past Incidents:\n" + json.dumps(history, indent=2)
         
-        prompt = """
+        try:
+            from .visualization import VisualizationService
+            diagram = VisualizationService.generate_attack_chain_diagram(incident_doc)
+            if diagram:
+                diagram_section = f"\n\n## Attack Chain Visualization\n{diagram}\n"
+            else:
+                diagram_section = ""
+        except ImportError:
+            diagram_section = ""
+
+        prompt = f"""
         Analyze the following Security Incident and generate a comprehensive Incident Response Playbook in Markdown format.
+        
+        {history_text}
         
         Include:
         1. **Executive Summary**: What happened? severity?
@@ -57,10 +72,11 @@ class PlaybookGenerator:
         3. **Containment Steps**: Immediate actions to stop the threat (e.g., Block IP, Disable User).
         4. **Remediation**: Long-term fixes.
         5. **Investigation Questions**: What should the human analyst check next?
+        6. **Historical Context**: Briefly mention if this looks like a recurring issue based on past incidents.
         
         Keep it professional, concise, and actionable.
         """
         
         playbook_content = LLMClient.generate_response(prompt, context=incident_json)
         
-        return playbook_content
+        return playbook_content + diagram_section

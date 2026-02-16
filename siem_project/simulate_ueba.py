@@ -31,7 +31,7 @@ def simulate_ueba():
         data, source = generate_login(username, base_ip)
         res = LogIngestionService.ingest_log(data, source)
         print(f"Normal Login #{i+1}: {res}")
-        time.sleep(0.2)
+        time.sleep(1.5)
 
     print("\n--- 2. Triggering Anomalies ---")
     
