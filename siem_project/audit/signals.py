@@ -1,11 +1,10 @@
-print(">>> AUDIT SIGNALS FILE LOADED <<<")
-
 from django.contrib.auth.signals import user_logged_in, user_logged_out, user_login_failed
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import AuditLog
-from .logger import audit_logger  
+# from .logger import audit_logger  # DEPRECATED
+from .ingestion import LogIngestionService
 
 def send_alert(subject, message, recipient_list=None):
     """Send email alert for high-severity events."""
@@ -20,9 +19,8 @@ def send_alert(subject, message, recipient_list=None):
             fail_silently=False,
         )
     except Exception as e:
-        # Log alert failure
-        audit_logger.error(f"Failed to send alert email: {e}")
-
+        # Log alert failure to console/file instead of ES loop
+        print(f"Failed to send alert email: {e}")
 
 @receiver(user_logged_in)
 def log_user_login(sender, request, user, **kwargs):
@@ -36,12 +34,12 @@ def log_user_login(sender, request, user, **kwargs):
         severity="LOW"
     )
 
-    # 2️⃣ ES log (NEW)
-    audit_logger.info("User login successful", extra={
+    # 2️⃣ LogIngestion Service (NEW)
+    LogIngestionService.ingest_log({
         'event_type': 'LOGIN_SUCCESS',
         'username': user.username,
         'ip_address': ip
-    })
+    }, source_type='django_auth')
 
 
 @receiver(user_logged_out)
@@ -55,11 +53,11 @@ def log_user_logout(sender, request, user, **kwargs):
         severity="LOW"
     )
 
-    audit_logger.info("User logout", extra={
+    LogIngestionService.ingest_log({
         'event_type': 'LOGOUT',
         'username': user.username,
         'ip_address': ip
-    })
+    }, source_type='django_auth')
 
 
 @receiver(user_login_failed)
@@ -74,11 +72,11 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
         severity="HIGH"
     )
 
-    audit_logger.warning("Failed login attempt", extra={
+    LogIngestionService.ingest_log({
         'event_type': 'LOGIN_FAILED',
         'username': username,
         'ip_address': ip
-    })
+    }, source_type='django_auth')
 
     send_alert(
         subject="SIEM Alert: Failed Login Attempt",
@@ -93,7 +91,7 @@ from .models import Transaction
 @receiver(post_save, sender=Transaction)
 def log_transaction_to_es(sender, instance, created, **kwargs):
     if created:
-        audit_logger.info(f"Transaction {instance.transaction_type}", extra={
+        LogIngestionService.ingest_log({
             'event_type': 'TRANSACTION',
             'transaction_data': {
                 'account_number': instance.account_number,
@@ -103,4 +101,4 @@ def log_transaction_to_es(sender, instance, created, **kwargs):
                 'is_flagged': instance.is_flagged,
                 'flag_reason': instance.flag_reason
             }
-        })
+        }, source_type='transaction')
